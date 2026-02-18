@@ -1,10 +1,11 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Hind_Siliguri } from "next/font/google";
+import { Hind_Siliguri, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { AGENCY_NAME, AGENCY_TAGLINE } from "@/lib/constants";
 
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
     default: `${AGENCY_NAME} | ${AGENCY_TAGLINE}`,
     template: `%s | ${AGENCY_NAME}`,
   },
-  description: "A comprehensive EdTech agency platform for professional digital skill training.",
+  description: "A premium EdTech platform for mastering digital skills through professional training.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
 };
 
 export default function RootLayout({
@@ -26,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${hindSiliguri.variable} font-sans`}>
+      <body className={`${inter.variable} ${hindSiliguri.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

@@ -1,6 +1,10 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+/**
+ * Refreshes the user session and returns the Supabase client and user.
+ * This is used inside the middleware to protect routes.
+ */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -54,6 +58,8 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // This will refresh session if expired - required for Server Components
+  // to read the latest session data.
   const { data: { user } } = await supabase.auth.getUser();
 
   return { supabase, response, user };

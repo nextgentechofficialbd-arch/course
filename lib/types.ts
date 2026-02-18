@@ -1,15 +1,20 @@
+/**
+ * Core type definitions for the EdTech platform.
+ */
+
 export type UserRole = 'student' | 'admin' | 'super_admin';
 export type EnrollmentStatus = 'pending' | 'confirmed' | 'rejected';
 export type PaymentMethod = 'bkash' | 'nagad';
 
 export interface Profile {
   id: string;
-  email: string;
+  email?: string;
   full_name: string;
   role: UserRole;
   phone?: string;
   avatar_url?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Course {
@@ -20,12 +25,16 @@ export interface Course {
   short_description: string;
   full_description?: string;
   price: number;
+  original_price?: number;
   thumbnail_url?: string;
   category?: string;
   is_active: boolean;
+  is_featured: boolean;
   rating: number;
   order_index: number;
+  what_you_learn?: string[];
   created_at: string;
+  updated_at: string;
 }
 
 export interface Lesson {
@@ -75,28 +84,18 @@ export interface IPLog {
   ip_address: string;
   user_agent?: string;
   page_visited: string;
-  created_at: string;
+  visited_at: string;
 }
 
 export interface Database {
   public: {
     Tables: {
-      profiles: {
-        Row: Profile;
-        Insert: Omit<Profile, 'created_at'>;
-        Update: Partial<Omit<Profile, 'created_at'>>;
-      };
-      courses: {
-        Row: Course;
-        Insert: Omit<Course, 'id' | 'created_at'>;
-        Update: Partial<Omit<Course, 'id' | 'created_at'>>;
-      };
-      enrollments: {
-        Row: Enrollment;
-        Insert: Omit<Enrollment, 'id' | 'enrolled_at'>;
-        Update: Partial<Omit<Enrollment, 'id' | 'enrolled_at'>>;
-      };
-      // Add other tables similarly as needed by Supabase TS generation
+      profiles: { Row: Profile; Insert: any; Update: any };
+      courses: { Row: Course; Insert: any; Update: any };
+      lessons: { Row: Lesson; Insert: any; Update: any };
+      enrollments: { Row: Enrollment; Insert: any; Update: any };
+      promo_codes: { Row: PromoCode; Insert: any; Update: any };
+      ip_logs: { Row: IPLog; Insert: any; Update: any };
     };
   };
 }

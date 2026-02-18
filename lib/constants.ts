@@ -1,3 +1,8 @@
+/**
+ * Global application constants.
+ * Centralizing environment variables for better maintainability.
+ */
+
 export const AGENCY_NAME = process.env.NEXT_PUBLIC_AGENCY_NAME || 'EduAgency';
 export const AGENCY_TAGLINE = process.env.NEXT_PUBLIC_AGENCY_TAGLINE || 'Learn. Grow. Succeed.';
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
