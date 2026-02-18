@@ -2,10 +2,6 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/lib/types';
 
-/**
- * Creates a Supabase client for use on the server side.
- * Manages session cookies within the Next.js headers.
- */
 export function createClient() {
   const cookieStore = cookies();
 
@@ -21,18 +17,14 @@ export function createClient() {
           try {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // Handled by middleware
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: '', ...options });
           } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // Handled by middleware
           }
         },
       },

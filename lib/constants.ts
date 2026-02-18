@@ -1,8 +1,3 @@
-/**
- * Global application constants.
- * Centralizing environment variables for better maintainability.
- */
-
 export const AGENCY_NAME = process.env.NEXT_PUBLIC_AGENCY_NAME || 'EduAgency';
 export const AGENCY_TAGLINE = process.env.NEXT_PUBLIC_AGENCY_TAGLINE || 'Learn. Grow. Succeed.';
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -15,9 +10,4 @@ export const PAYMENT = {
 export const SOCIAL = {
   FACEBOOK: process.env.NEXT_PUBLIC_FACEBOOK_URL || '',
   WHATSAPP: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '',
-};
-
-export const SUPABASE = {
-  URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
 };

@@ -6,39 +6,21 @@ import AboutSection from '@/components/landing/AboutSection';
 import ContactSection from '@/components/landing/ContactSection';
 import { Course } from '@/lib/types';
 
-/**
- * The main landing page.
- * Fetches all active courses from Supabase server-side.
- */
 export default async function HomePage() {
   const supabase = createClient();
   
-  // Fetch active courses ordered by their sequence
-  const { data: courses, error } = await supabase
+  const { data: courses } = await supabase
     .from('courses')
     .select('*')
     .eq('is_active', true)
     .order('order_index', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching courses for landing page:', error);
-  }
-
   return (
     <>
       <HeroSection />
-      
-      <div id="programs">
-        <ProgramsSection courses={(courses as Course[]) || []} />
-      </div>
-      
-      <div id="about">
-        <AboutSection />
-      </div>
-      
-      <div id="contact">
-        <ContactSection />
-      </div>
+      <ProgramsSection courses={(courses as Course[]) || []} />
+      <AboutSection />
+      <ContactSection />
     </>
   );
 }
