@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   const { supabase, response, user } = await updateSession(request);
   const path = request.nextUrl.pathname;
 
-  // Protect Admin Routes
+  // Protect Admin Section
   if (path.startsWith('/admin')) {
     if (!user) return NextResponse.redirect(new URL('/login', request.url));
     
@@ -20,14 +20,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect Dashboard & Player
+  // Protect Student Areas
   if ((path.startsWith('/dashboard') || path.startsWith('/course')) && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const redirectUrl = new URL('/login', request.url);
+    redirectUrl.searchParams.set('redirect', path);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };

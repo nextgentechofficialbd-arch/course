@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -11,20 +10,18 @@ export default async function AdminLayout({
 }) {
   const supabase = createClient();
 
-  // 1. Verify Authentication
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect('/login');
   }
 
-  // 2. Verify Authorization (Role Check)
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
   if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {

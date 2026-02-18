@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -9,23 +8,20 @@ import StudentDashboard from '@/components/student/StudentDashboard';
 export default async function DashboardPage() {
   const supabase = createClient();
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  // 1. Fetch confirmed enrollments with nested course data
   const { data: enrollments } = await supabase
     .from('enrollments')
     .select('*, courses(*)')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('payment_status', 'confirmed');
 
-  // 2. Fetch all progress logs for this student
   const { data: progress } = await supabase
     .from('progress')
     .select('course_id, lesson_id')
-    .eq('user_id', session.user.id);
+    .eq('user_id', user.id);
 
-  // 3. Fetch lesson counts to calculate percentage server-side
   const courseIds = enrollments?.map(e => e.course_id) || [];
   const { data: lessonCounts } = await supabase
     .from('lessons')
@@ -46,7 +42,7 @@ export default async function DashboardPage() {
         <StudentDashboard 
           enrollments={enrollments || []} 
           stats={statsByCourse}
-          user={session.user}
+          user={user}
         />
       </main>
       <Footer />

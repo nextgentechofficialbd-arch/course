@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { 
@@ -15,7 +14,6 @@ import Link from 'next/link';
 export default async function AdminDashboardPage() {
   const supabase = createClient();
 
-  // 1. Concurrent Fetching for Stats
   const [
     { count: studentCount },
     { data: revenueData },
@@ -113,20 +111,6 @@ export default async function AdminDashboardPage() {
             <Link href="/admin/enrollments" className="inline-block bg-white text-primary px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest">
               Review Pending
             </Link>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-             <h4 className="text-lg font-black mb-6 dark:text-white">Management Tools</h4>
-             <div className="grid grid-cols-2 gap-4">
-               <Link href="/admin/courses" className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-2xl hover:bg-primary/10 hover:text-primary transition-all">
-                 <BookOpen size={24} />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Courses</span>
-               </Link>
-               <Link href="/admin/promo" className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-2xl hover:bg-primary/10 hover:text-primary transition-all">
-                 <Tag size={24} />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Coupons</span>
-               </Link>
-             </div>
           </div>
         </div>
       </div>
