@@ -9,15 +9,10 @@ import ContactSection from './components/landing/ContactSection';
 import Footer from './components/landing/Footer';
 import Courses from './components/Courses';
 import Auth from './components/Auth';
+import { usePathname } from 'next/navigation';
 
 const App: React.FC = () => {
-  const [pathname, setPathname] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const handlePopState = () => setPathname(window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  const pathname = usePathname();
 
   const handleNavigate = (sectionId: string) => {
     if (pathname !== '/') {
@@ -38,7 +33,7 @@ const App: React.FC = () => {
   const renderPage = () => {
     if (pathname === '/auth') {
       return (
-        <div className="pt-20">
+        <div className="pt-20 min-h-screen">
           <Auth onAuthSuccess={() => {
             window.history.pushState({}, '', '/');
             window.dispatchEvent(new Event('popstate'));
@@ -60,6 +55,7 @@ const App: React.FC = () => {
       );
     }
 
+    // Default landing page
     return (
       <>
         <HeroSection onExplore={() => handleNavigate('programs')} />

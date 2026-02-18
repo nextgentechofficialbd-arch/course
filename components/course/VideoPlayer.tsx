@@ -1,83 +1,103 @@
 
-"use client";
+'use client';
 
-import React, { useEffect, useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, CheckCircle2, Loader2, Lock } from 'lucide-react';
 
 interface VideoPlayerProps {
   fileId: string;
   lessonId: string;
   courseId: string;
+  isCompleted: boolean;
+  onComplete: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ fileId, lessonId, courseId }) => {
-  const [isReady, setIsReady] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
+export default function VideoPlayer({ fileId, lessonId, courseId, isCompleted, onComplete }: VideoPlayerProps) {
+  const [marking, setMarking] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    setIsReady(false);
-    const timer = setTimeout(() => setIsReady(true), 500);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Block F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I, PrintScreen
-      if (
-        e.key === 'F12' || 
-        (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'i')) ||
-        e.key === 'PrintScreen'
-      ) {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen') {
         e.preventDefault();
-        setShowWarning(true);
-        setTimeout(() => setShowWarning(false), 3000);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
       }
     };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [fileId]);
+  const handleMarkComplete = async () => {
+    setMarking(true);
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lesson_id: lessonId, course_id: courseId })
+      });
+      if (res.ok) {
+        onComplete();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMarking(false);
+    }
+  };
 
   return (
-    <div 
-      className="relative w-full h-full bg-black select-none overflow-hidden" 
-      onContextMenu={(e) => {
-        e.preventDefault();
-        setShowWarning(true);
-        setTimeout(() => setShowWarning(false), 3000);
-      }}
-    >
-      {isReady ? (
-        <>
-          <iframe
-            src={`https://drive.google.com/file/d/${fileId}/preview`}
-            className="w-full h-full border-0 pointer-events-auto"
-            allow="autoplay"
-            loading="lazy"
-          />
-          {/* Transparent Overlay to absorb mouse clicks near UI elements */}
-          <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'rgba(0,0,0,0.01)' }} />
-          
-          {/* Content Protection Toast */}
-          {showWarning && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-slate-900/90 text-white px-6 py-4 rounded-2xl flex items-center gap-3 border border-primary/30 backdrop-blur-md animate-in fade-in zoom-in duration-300">
-              <ShieldAlert className="w-5 h-5 text-primary" />
-              <span className="text-sm font-bold">Content is protected. Recording/Saving is disabled.</span>
-            </div>
-          )}
-
-          <div className="absolute top-4 left-4 z-20 opacity-40 pointer-events-none flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[10px] text-white font-black uppercase tracking-widest bg-black/50 px-2 py-1 rounded">Secure Stream</span>
+    <div className="w-full h-full flex flex-col group/player">
+      <div 
+        className="relative flex-1 bg-black overflow-hidden select-none"
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+        }}
+      >
+        <iframe
+          src={`https://drive.google.com/file/d/${fileId}/preview`}
+          className="w-full h-full border-0"
+          allow="autoplay"
+          title="Video Player"
+        />
+        
+        {/* Transparent UI Shield */}
+        <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-black/20 to-transparent" />
+        
+        {/* Security Warning */}
+        {showToast && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-slate-900/95 text-white px-8 py-4 rounded-3xl flex items-center gap-4 border border-primary/40 backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl">
+            <Lock className="w-6 h-6 text-primary" />
+            <span className="text-sm font-black uppercase tracking-widest">Protected Content</span>
           </div>
-        </>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        )}
+
+        {/* Branding Overlay */}
+        <div className="absolute top-6 left-6 z-20 flex items-center gap-2 opacity-30 pointer-events-none group-hover/player:opacity-60 transition-opacity">
+           <ShieldCheck className="w-4 h-4 text-primary" />
+           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Secure Encrypted Stream</span>
         </div>
-      )}
+      </div>
+
+      <div className="absolute bottom-10 right-10 z-20">
+        {isCompleted ? (
+          <div className="bg-green-500 text-white px-8 py-3 rounded-2xl font-black text-sm flex items-center gap-3 shadow-2xl shadow-green-500/20">
+            <CheckCircle2 size={20} />
+            Completed
+          </div>
+        ) : (
+          <button 
+            onClick={handleMarkComplete}
+            disabled={marking}
+            className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-sm flex items-center gap-3 shadow-2xl shadow-primary/30 hover:scale-[1.05] transition-all disabled:opacity-50"
+          >
+            {marking ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+            Mark as Complete
+          </button>
+        )}
+      </div>
     </div>
   );
-};
-
-export default VideoPlayer;
+}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -64,7 +63,8 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ enrollments, stats,
                   <p className="text-slate-500 text-xs font-medium mb-6">Confirmed: {new Date(enrollment.confirmed_at).toLocaleDateString()}</p>
                   
                   <div className="mt-auto space-y-6">
-                    <ProgressBar completedCount={s.completed} totalCount={s.total} />
+                    {/* Fixed: Props changed to match ProgressBarProps interface */}
+                    <ProgressBar completed={s.completed} total={s.total} />
                     
                     <Link 
                       href={`/course/${course.slug}`}

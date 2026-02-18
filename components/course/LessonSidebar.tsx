@@ -1,64 +1,65 @@
 
-"use client";
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { PlayCircle, CheckCircle, Lock, ChevronRight } from 'lucide-react';
+import { PlayCircle, CheckCircle2, Circle, Clock } from 'lucide-react';
+import ProgressBar from './ProgressBar';
 
 interface LessonSidebarProps {
   lessons: any[];
-  completedLessonIds: string[];
+  completedIds: Set<string>;
   activeLessonId: string;
   courseSlug: string;
+  onItemClick?: () => void;
 }
 
-const LessonSidebar: React.FC<LessonSidebarProps> = ({ 
-  lessons, 
-  completedLessonIds, 
-  activeLessonId, 
-  courseSlug 
-}) => {
+export default function LessonSidebar({ lessons, completedIds, activeLessonId, courseSlug, onItemClick }: LessonSidebarProps) {
   return (
-    <div className="p-4 space-y-1">
-      {lessons.map((lesson, idx) => {
-        const isCompleted = completedLessonIds.includes(lesson.id);
-        const isActive = activeLessonId === lesson.id;
-        
-        return (
-          <Link 
-            key={lesson.id}
-            href={`/course/${courseSlug}?lesson=${lesson.id}`}
-            className={`flex items-center justify-between p-4 rounded-xl transition-all group ${
-              isActive 
-                ? 'bg-primary/5 border border-primary/20' 
-                : 'hover:bg-slate-50 dark:hover:bg-slate-900 border border-transparent'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+    <div className="flex flex-col h-full">
+      <div className="p-8 border-b border-border space-y-4">
+        <ProgressBar completed={completedIds.size} total={lessons.length} />
+      </div>
+      <div className="p-4 space-y-1 overflow-y-auto">
+        {lessons.map((lesson, idx) => {
+          const isCompleted = completedIds.has(lesson.id);
+          const isActive = activeLessonId === lesson.id;
+
+          return (
+            <Link
+              key={lesson.id}
+              href={`/course/${courseSlug}?lesson=${lesson.id}`}
+              onClick={onItemClick}
+              className={`flex items-center gap-4 p-4 rounded-2xl transition-all group ${
+                isActive 
+                  ? 'bg-primary/10 border border-primary/20' 
+                  : 'hover:bg-slate-50 dark:hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                 isCompleted 
                   ? 'bg-green-100 text-green-600' 
                   : isActive 
-                    ? 'bg-primary text-white' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                    : 'bg-muted text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-800'
               }`}>
-                {isCompleted ? <CheckCircle className="w-5 h-5" /> : <PlayCircle className="w-4 h-4" />}
+                {isCompleted ? <CheckCircle2 size={20} /> : isActive ? <PlayCircle size={20} /> : <Circle size={20} />}
               </div>
-              <div className="flex flex-col">
-                <span className={`text-xs font-black uppercase tracking-widest mb-0.5 ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${isActive ? 'text-primary' : 'text-slate-400'}`}>
                   Lesson {idx + 1}
-                </span>
-                <span className={`text-sm font-bold leading-tight ${isActive ? 'text-primary' : 'dark:text-white'}`}>
+                </p>
+                <h4 className={`text-sm font-bold truncate leading-tight ${isActive ? 'text-foreground' : 'text-slate-500'}`}>
                   {lesson.title}
-                </span>
+                </h4>
+                <div className="flex items-center gap-2 mt-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <Clock size={10} /> {lesson.duration_minutes}m
+                </div>
               </div>
-            </div>
-            {isActive && <ChevronRight className="w-4 h-4 text-primary animate-pulse" />}
-          </Link>
-        );
-      })}
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
-};
-
-export default LessonSidebar;
+}
