@@ -1,85 +1,110 @@
 
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+
+import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const supabase = createRouteHandlerClient({ cookies });
+    
+    // Use admin client for user management
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    const fullName = formData.get('fullName') as string;
+    const full_name = formData.get('full_name') as string;
     const email = formData.get('email') as string;
     const phone = formData.get('phone') as string;
-    const paymentMethod = formData.get('paymentMethod') as string;
-    const transactionId = formData.get('transactionId') as string;
-    const courseId = formData.get('courseId') as string;
-    const promoCode = formData.get('promoCode') as string;
-    const finalPrice = formData.get('finalPrice') as string;
+    const payment_method = formData.get('payment_method') as string;
+    const transaction_id = formData.get('transaction_id') as string;
+    const payment_number = formData.get('payment_number') as string;
+    const course_id = formData.get('course_id') as string;
+    const promo_code = formData.get('promo_code') as string;
+    const amount_paid = parseInt(formData.get('amount_paid') as string);
     const screenshot = formData.get('screenshot') as File;
 
-    // 1. Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ message: "Authentication required" }, { status: 401 });
+    if (!email || !course_id || !screenshot) {
+      return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    // 2. Check if already enrolled
-    const { data: existing } = await supabase
-      .from('enrollments')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('course_id', courseId)
-      .single();
+    // 1. Check if user exists, if not create
+    // Fix: Access admin property by casting auth as any to avoid TS errors
+    const { data: users, error: findUserError } = await (supabaseAdmin.auth as any).admin.listUsers();
+    let targetUser = users?.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
 
-    if (existing) {
-      return NextResponse.json({ message: "You are already enrolled in this course" }, { status: 400 });
+    if (!targetUser) {
+      const { data: newUser, error: createError } = await (supabaseAdmin.auth as any).admin.createUser({
+        email,
+        email_confirm: true,
+        password: uuidv4(), // Temporary secure password
+        user_metadata: { full_name, role: 'student' }
+      });
+      if (createError) throw createError;
+      targetUser = newUser.user;
     }
+
+    const userId = targetUser!.id;
+
+    // 2. Upsert Profile
+    await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: userId,
+        full_name,
+        phone,
+        role: 'student'
+      });
 
     // 3. Upload screenshot
     const fileExt = screenshot.name.split('.').pop();
-    const fileName = `${user.id}/${uuidv4()}.${fileExt}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const fileName = `${course_id}/${Date.now()}_${uuidv4()}.${fileExt}`;
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('payment-screenshots')
       .upload(fileName, screenshot);
 
-    if (uploadError) {
-      return NextResponse.json({ message: "Failed to upload screenshot" }, { status: 500 });
-    }
+    if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabaseAdmin.storage
       .from('payment-screenshots')
       .getPublicUrl(fileName);
 
-    // 4. Create enrollment record
-    const { error: enrollError } = await supabase
+    // 4. Create Enrollment
+    const { error: enrollError } = await supabaseAdmin
       .from('enrollments')
       .insert({
-        user_id: user.id,
-        course_id: courseId,
-        payment_status: 'pending',
-        payment_method: paymentMethod,
-        payment_number: phone,
-        transaction_id: transactionId,
+        user_id: userId,
+        course_id,
+        payment_method,
+        payment_number,
+        transaction_id,
         payment_screenshot_url: publicUrl,
-        amount_paid: parseInt(finalPrice),
-        promo_code_used: promoCode || null,
-        access_token: uuidv4(),
+        amount_paid,
+        promo_code_used: promo_code || null,
+        payment_status: 'pending',
+        access_token: uuidv4()
       });
 
     if (enrollError) {
-      return NextResponse.json({ message: "Database error" }, { status: 500 });
+       // Cleanup storage if db fails
+       await supabaseAdmin.storage.from('payment-screenshots').remove([fileName]);
+       throw enrollError;
     }
 
-    // 5. Update promo usage if needed
-    if (promoCode) {
-      await supabase.rpc('increment_promo_usage', { p_code: promoCode });
+    // 5. Update Promo usage
+    if (promo_code) {
+      const { data: promo } = await supabaseAdmin.from('promo_codes').select('used_count').eq('code', promo_code).single();
+      if (promo) {
+        await supabaseAdmin.from('promo_codes').update({ used_count: promo.used_count + 1 }).eq('code', promo_code);
+      }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: 'Enrollment submitted! We will confirm within 24 hours.' });
 
-  } catch (err) {
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  } catch (err: any) {
+    console.error('Enrollment submission error:', err);
+    return NextResponse.json({ message: err.message || "Internal server error" }, { status: 500 });
   }
 }

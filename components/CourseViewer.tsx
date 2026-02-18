@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Course } from '../types';
 import { ChevronLeft, PlayCircle, CheckCircle, Lock, BookOpen, Share2, Heart } from 'lucide-react';
@@ -78,8 +79,9 @@ const CourseViewer: React.FC<CourseViewerProps> = ({ course, onBack }) => {
               </div>
 
               <div className="prose dark:prose-invert max-w-none">
+                {/* Changed course.description to full_description or short_description to fix TS error */}
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {course.description} This course is designed to take you from a complete beginner to an expert in the field. 
+                  {course.full_description || course.short_description} This course is designed to take you from a complete beginner to an expert in the field. 
                   We cover everything you need to know, from basic concepts to advanced practical applications.
                 </p>
                 <h3 className="text-xl font-bold mt-8 mb-4">What you'll learn:</h3>

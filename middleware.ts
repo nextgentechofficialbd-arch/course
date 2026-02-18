@@ -1,44 +1,59 @@
+import { updateSession } from '@/lib/supabase/middleware';
+import { NextResponse, type NextRequest } from 'next/server';
 
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+export async function middleware(request: NextRequest) {
+  const { supabase, response, user } = await updateSession(request);
+  const path = request.nextUrl.pathname;
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-  const { data: { session } } = await supabase.auth.getSession();
+  // 1. Redirect already logged-in users from /auth
+  if (path === '/auth' && user) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
 
-  const path = req.nextUrl.pathname;
-
-  // 1. Admin Route Protection
+  // 2. Admin Route Protection
   if (path.startsWith('/admin')) {
-    if (!session) return NextResponse.redirect(new URL('/login', req.url));
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
-    
-    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
-      return NextResponse.redirect(new URL('/', req.url));
+
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 
-  // 2. Course Player Protection
+  // 3. Course Access Protection
   if (path.startsWith('/course/')) {
-    if (!session) return NextResponse.redirect(new URL('/login', req.url));
-    // Further granular check for specific course enrollment is done inside the page component
-    // for performance and to handle dynamic slugs more easily.
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
+
+    const slug = path.split('/')[2];
+    
+    // Check enrollment
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('payment_status, courses!inner(slug)')
+      .eq('user_id', user.id)
+      .eq('courses.slug', slug)
+      .eq('payment_status', 'confirmed')
+      .maybeSingle();
+
+    if (!enrollment) {
+      return NextResponse.redirect(new URL(`/programs/${slug}`, request.url));
+    }
   }
 
-  // 3. Login Redirect
-  if (path === '/login' && session) {
-    return NextResponse.redirect(new URL('/', req.url));
-  }
-
-  return res;
+  return response;
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/course/:path*', '/login'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };

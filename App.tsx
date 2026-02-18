@@ -1,59 +1,85 @@
 
 import React, { useState, useEffect } from 'react';
-import { Route } from './types';
+import { ThemeProvider } from 'next-themes';
 import Navbar from './components/landing/Navbar';
 import HeroSection from './components/landing/HeroSection';
 import ProgramsSection from './components/landing/ProgramsSection';
 import AboutSection from './components/landing/AboutSection';
 import ContactSection from './components/landing/ContactSection';
 import Footer from './components/landing/Footer';
+import Courses from './components/Courses';
+import Auth from './components/Auth';
 
 const App: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [pathname, setPathname] = useState(window.location.pathname);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    setDarkMode(isDark);
-    if (isDark) document.documentElement.classList.add('dark');
+    const handlePopState = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
   const handleNavigate = (sectionId: string) => {
+    if (pathname !== '/') {
+      window.history.pushState({}, '', '/');
+      window.dispatchEvent(new Event('popstate'));
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) element.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200">
-      <Navbar 
-        darkMode={darkMode} 
-        onToggleDarkMode={toggleDarkMode}
-        onNavigate={handleNavigate}
-      />
-      
-      <main>
+  const renderPage = () => {
+    if (pathname === '/auth') {
+      return (
+        <div className="pt-20">
+          <Auth onAuthSuccess={() => {
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new Event('popstate'));
+          }} />
+        </div>
+      );
+    }
+    
+    if (pathname === '/programs') {
+      return (
+        <div className="pt-24 min-h-screen">
+          <Courses onNavigate={(route) => {
+            if (route === 'home') {
+              window.history.pushState({}, '', '/');
+              window.dispatchEvent(new Event('popstate'));
+            }
+          }} />
+        </div>
+      );
+    }
+
+    return (
+      <>
         <HeroSection onExplore={() => handleNavigate('programs')} />
         <ProgramsSection />
         <AboutSection />
         <ContactSection />
-      </main>
+      </>
+    );
+  };
 
-      <Footer />
-    </div>
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+        <Navbar />
+        <main>
+          {renderPage()}
+        </main>
+        <Footer />
+      </div>
+    </ThemeProvider>
   );
 };
 

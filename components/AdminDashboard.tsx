@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 import { Users, BookOpen, DollarSign, TrendingUp, Download, Settings, MoreVertical } from 'lucide-react';
@@ -44,7 +45,8 @@ const AdminDashboard: React.FC = () => {
           <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
-                {React.cloneElement(stat.icon as React.ReactElement, { className: 'w-6 h-6' })}
+                {/* Fixed React.cloneElement type error by casting stat.icon */}
+                {React.cloneElement(stat.icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
               </div>
               <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.color} ${stat.bg}`}>
                 {stat.change}

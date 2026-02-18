@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -10,7 +9,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createClient();
 
   const {
     data: { session },
@@ -33,8 +32,8 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       <AdminSidebar />
-      <main className="flex-1 p-8 lg:pl-72 transition-all">
-        <div className="max-w-7xl mx-auto">{children}</div>
+      <main className="flex-1 lg:pl-64 transition-all">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">{children}</div>
       </main>
     </div>
   );
