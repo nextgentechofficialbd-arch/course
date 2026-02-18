@@ -19,7 +19,7 @@ export default async function CoursePlayerPage({
     redirect(`/login?redirect=/course/${params.slug}`);
   }
 
-  // 2. Fetch Course by Slug
+  // 2. Fetch Course Data
   const { data: course, error: courseError } = await supabase
     .from('courses')
     .select('*')
@@ -40,10 +40,11 @@ export default async function CoursePlayerPage({
     .maybeSingle();
 
   if (enrollError || !enrollment) {
+    // If not enrolled or payment is pending, send back to landing page
     redirect(`/programs/${params.slug}`);
   }
 
-  // 4. Fetch Curriculum (Lessons)
+  // 4. Fetch Full Curriculum
   const { data: lessons } = await supabase
     .from('lessons')
     .select('*')
@@ -52,16 +53,16 @@ export default async function CoursePlayerPage({
 
   if (!lessons || lessons.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl">
-           <h2 className="text-2xl font-black mb-2 italic">Curriculum Loading</h2>
-           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are preparing your content.</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-border">
+           <h2 className="text-2xl font-black mb-2 italic">Curriculum Under Preparation</h2>
+           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are uploading modules. Check back soon!</p>
         </div>
       </div>
     );
   }
 
-  // 5. Fetch User Progress
+  // 5. Fetch Student Progress
   const { data: progress } = await supabase
     .from('progress')
     .select('lesson_id')

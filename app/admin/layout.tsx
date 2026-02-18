@@ -11,14 +11,16 @@ export default async function AdminLayout({
 }) {
   const supabase = createClient();
 
+  // 1. Verify Authentication
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect('/auth');
+    redirect('/login');
   }
 
+  // 2. Verify Authorization (Role Check)
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
