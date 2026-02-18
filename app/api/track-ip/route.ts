@@ -15,22 +15,9 @@ export async function POST(req: Request) {
     const ip = (forwarded ? forwarded.split(',')[0] : realIp || 'unknown').trim();
     const ua = req.headers.get('user-agent') || 'unknown';
 
-    if (ip === 'unknown') {
-      return NextResponse.json({ success: false, message: 'Invalid IP' });
-    }
+    if (ip === 'unknown') return NextResponse.json({ success: false });
 
-    // 1. Check if IP is blocked
-    const { data: blocked } = await supabaseAdmin
-      .from('blocked_ips')
-      .select('ip_address')
-      .eq('ip_address', ip)
-      .maybeSingle();
-
-    if (blocked) {
-      return NextResponse.json({ blocked: true, success: false }, { status: 403 });
-    }
-
-    // 2. Anti-Spam: Check last log
+    // Simple anti-spam
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: recentLog } = await supabaseAdmin
       .from('ip_logs')
@@ -41,11 +28,8 @@ export async function POST(req: Request) {
       .limit(1)
       .maybeSingle();
 
-    if (recentLog) {
-      return NextResponse.json({ success: true, skipped: true });
-    }
+    if (recentLog) return NextResponse.json({ success: true, skipped: true });
 
-    // 3. Insert Log
     await supabaseAdmin.from('ip_logs').insert({
       ip_address: ip,
       user_agent: ua,
@@ -54,7 +38,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('IP Track Error:', err);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }

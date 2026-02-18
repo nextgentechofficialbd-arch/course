@@ -1,6 +1,6 @@
 
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import CoursePlayerLayout from '@/components/course/CoursePlayerLayout';
 import React from 'react';
 
@@ -27,7 +27,7 @@ export default async function CourseDetailPage({
     .single();
 
   if (courseError || !course) {
-    redirect('/programs');
+    return notFound();
   }
 
   // 3. Verify Confirmed Enrollment
@@ -54,8 +54,8 @@ export default async function CourseDetailPage({
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl">
-           <h2 className="text-2xl font-black mb-2">Curriculum Loading...</h2>
-           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are preparing your content.</p>
+           <h2 className="text-2xl font-black mb-2 italic">Curriculum Incoming</h2>
+           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are uploading your modules.</p>
         </div>
       </div>
     );

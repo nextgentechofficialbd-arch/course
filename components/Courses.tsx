@@ -3,24 +3,21 @@
 
 import React, { useState } from 'react';
 import { Route, Course } from '../types';
-import { MOCK_COURSES } from '../constants';
-import { Search, Filter, BookOpen, Star, Clock } from 'lucide-react';
+import { Search, BookOpen, Star, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 interface CoursesProps {
-  courses?: Course[];
+  courses: Course[];
   onNavigate?: (route: Route, params?: any) => void;
 }
 
-const Courses: React.FC<CoursesProps> = ({ courses, onNavigate }) => {
+const Courses: React.FC<CoursesProps> = ({ courses }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = ['All', 'Programming', 'Business', 'Design', 'Marketing'];
+  const categories = ['All', ...Array.from(new Set(courses.map(c => c.category).filter(Boolean)))];
 
-  const displayCourses = courses || MOCK_COURSES;
-
-  const filteredCourses = displayCourses.filter(course => {
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (course.short_description || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
@@ -28,13 +25,7 @@ const Courses: React.FC<CoursesProps> = ({ courses, onNavigate }) => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight leading-none">Explore Our <br/>Expert Programs</h1>
-        <p className="text-slate-500 font-medium max-w-lg">Discover your next passion or skill today with our industry-leading mentors.</p>
-      </div>
-
-      {/* Filters & Search */}
+    <div className="max-w-7xl mx-auto px-6">
       <div className="flex flex-col md:flex-row gap-6 mb-12">
         <div className="flex-grow relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -50,7 +41,7 @@ const Courses: React.FC<CoursesProps> = ({ courses, onNavigate }) => {
           {categories.map(category => (
             <button 
               key={category}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => setSelectedCategory(category!)}
               className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
                 selectedCategory === category 
                 ? 'bg-primary text-white shadow-lg shadow-primary/20' 
@@ -63,7 +54,6 @@ const Courses: React.FC<CoursesProps> = ({ courses, onNavigate }) => {
         </div>
       </div>
 
-      {/* Course Grid */}
       {filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {filteredCourses.map(course => (
@@ -74,10 +64,9 @@ const Courses: React.FC<CoursesProps> = ({ courses, onNavigate }) => {
             >
               <div className="relative aspect-[16/10] overflow-hidden m-4 rounded-[1.5rem] bg-muted">
                 {course.thumbnail_url ? (
-                  <img 
-                    src={course.thumbnail_url} 
-                    alt={course.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  <div 
+                    className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
+                    style={{ backgroundImage: course.thumbnail_url.includes('linear-gradient') ? course.thumbnail_url : `url(${course.thumbnail_url})` }}
                   />
                 ) : (
                    <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center">
@@ -95,7 +84,6 @@ const Courses: React.FC<CoursesProps> = ({ courses, onNavigate }) => {
                 <div className="flex items-center gap-1 text-yellow-500 mb-3">
                   <Star className="w-4 h-4 fill-current" />
                   <span className="text-sm font-black">{course.rating || '4.9'}</span>
-                  <span className="text-slate-400 text-xs font-bold ml-1 uppercase tracking-tighter">Verified</span>
                 </div>
                 
                 <h3 className="text-2xl font-black mb-3 group-hover:text-primary transition-colors leading-tight">

@@ -19,13 +19,13 @@ export default async function DashboardPage() {
     .eq('user_id', session.user.id)
     .eq('payment_status', 'confirmed');
 
-  // Fetch progress to calculate percentages
+  // Fetch progress
   const { data: progress } = await supabase
     .from('progress')
     .select('course_id, lesson_id')
     .eq('user_id', session.user.id);
 
-  // Fetch total lesson counts for each course
+  // Fetch total lesson counts for enrolled courses
   const courseIds = enrollments?.map(e => e.course_id) || [];
   const { data: lessonCounts } = await supabase
     .from('lessons')
@@ -40,9 +40,9 @@ export default async function DashboardPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
       <Navbar />
-      <main className="pt-24 pb-20">
+      <main className="flex-grow pt-24 pb-20">
         <StudentDashboard 
           enrollments={enrollments || []} 
           stats={statsByCourse}
