@@ -12,20 +12,20 @@ export default async function DashboardPage() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) redirect('/auth');
 
-  // Fetch enrollments with course details
+  // Fetch confirmed enrollments with course details
   const { data: enrollments } = await supabase
     .from('enrollments')
     .select('*, courses(*)')
     .eq('user_id', session.user.id)
     .eq('payment_status', 'confirmed');
 
-  // Fetch progress
+  // Fetch progress to calculate percentages
   const { data: progress } = await supabase
     .from('progress')
     .select('course_id, lesson_id')
     .eq('user_id', session.user.id);
 
-  // Fetch total lesson counts for enrolled courses
+  // Fetch total lesson counts for each enrolled course
   const courseIds = enrollments?.map(e => e.course_id) || [];
   const { data: lessonCounts } = await supabase
     .from('lessons')

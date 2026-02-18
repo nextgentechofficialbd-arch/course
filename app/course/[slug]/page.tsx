@@ -4,7 +4,7 @@ import { redirect, notFound } from 'next/navigation';
 import CoursePlayerLayout from '@/components/course/CoursePlayerLayout';
 import React from 'react';
 
-export default async function CourseDetailPage({ 
+export default async function CoursePlayerPage({ 
   params, 
   searchParams 
 }: { 
@@ -19,7 +19,7 @@ export default async function CourseDetailPage({
     redirect(`/login?redirect=/course/${params.slug}`);
   }
 
-  // 2. Fetch Course
+  // 2. Fetch Course by Slug
   const { data: course, error: courseError } = await supabase
     .from('courses')
     .select('*')
@@ -43,7 +43,7 @@ export default async function CourseDetailPage({
     redirect(`/programs/${params.slug}`);
   }
 
-  // 4. Fetch Curriculum
+  // 4. Fetch Curriculum (Lessons)
   const { data: lessons } = await supabase
     .from('lessons')
     .select('*')
@@ -54,8 +54,8 @@ export default async function CourseDetailPage({
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl">
-           <h2 className="text-2xl font-black mb-2 italic">Curriculum Incoming</h2>
-           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are uploading your modules.</p>
+           <h2 className="text-2xl font-black mb-2 italic">Curriculum Loading</h2>
+           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are preparing your content.</p>
         </div>
       </div>
     );
