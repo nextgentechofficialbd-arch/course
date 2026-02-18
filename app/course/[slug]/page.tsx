@@ -1,8 +1,6 @@
-
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import CoursePlayerLayout from '@/components/course/CoursePlayerLayout';
-import React from 'react';
 
 export default async function CoursePlayerPage({ 
   params, 
@@ -13,72 +11,53 @@ export default async function CoursePlayerPage({
 }) {
   const supabase = createClient();
 
-  // 1. Verify Session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     redirect(`/login?redirect=/course/${params.slug}`);
   }
 
-  // 2. Fetch Course Data
-  const { data: course, error: courseError } = await supabase
+  const { data: course } = await supabase
     .from('courses')
     .select('*')
     .eq('slug', params.slug)
     .single();
 
-  if (courseError || !course) {
-    return notFound();
-  }
+  if (!course) return notFound();
 
-  // 3. Verify Confirmed Enrollment
-  const { data: enrollment, error: enrollError } = await supabase
+  const { data: enrollment } = await supabase
     .from('enrollments')
     .select('payment_status')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('course_id', course.id)
     .eq('payment_status', 'confirmed')
     .maybeSingle();
 
-  if (enrollError || !enrollment) {
-    // If not enrolled or payment is pending, send back to landing page
+  if (!enrollment) {
     redirect(`/programs/${params.slug}`);
   }
 
-  // 4. Fetch Full Curriculum
   const { data: lessons } = await supabase
     .from('lessons')
     .select('*')
     .eq('course_id', course.id)
     .order('order_index', { ascending: true });
 
-  if (!lessons || lessons.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
-        <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-border">
-           <h2 className="text-2xl font-black mb-2 italic">Curriculum Under Preparation</h2>
-           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are uploading modules. Check back soon!</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 5. Fetch Student Progress
   const { data: progress } = await supabase
     .from('progress')
     .select('lesson_id')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('course_id', course.id);
 
   const completedLessonIds = progress?.map(p => p.lesson_id) || [];
-  const activeLessonId = searchParams.lesson || lessons[0].id;
+  const activeLessonId = searchParams.lesson || lessons?.[0]?.id;
 
   return (
     <CoursePlayerLayout 
       course={course}
-      lessons={lessons}
+      lessons={lessons || []}
       completedLessonIds={completedLessonIds}
       activeLessonId={activeLessonId}
-      userId={session.user.id}
+      userId={user.id}
     />
   );
 }

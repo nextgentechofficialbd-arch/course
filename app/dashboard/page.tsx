@@ -17,12 +17,14 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .eq('payment_status', 'confirmed');
 
+  const courseIds = enrollments?.map(e => e.course_id) || [];
+  
   const { data: progress } = await supabase
     .from('progress')
     .select('course_id, lesson_id')
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .in('course_id', courseIds);
 
-  const courseIds = enrollments?.map(e => e.course_id) || [];
   const { data: lessonCounts } = await supabase
     .from('lessons')
     .select('course_id')
