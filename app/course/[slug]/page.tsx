@@ -19,7 +19,7 @@ export default async function CourseDetailPage({
     redirect(`/login?redirect=/course/${params.slug}`);
   }
 
-  // 2. Fetch Course and Verify Enrollment
+  // 2. Fetch Course
   const { data: course, error: courseError } = await supabase
     .from('courses')
     .select('*')
@@ -27,9 +27,10 @@ export default async function CourseDetailPage({
     .single();
 
   if (courseError || !course) {
-    redirect('/');
+    redirect('/programs');
   }
 
+  // 3. Verify Confirmed Enrollment
   const { data: enrollment, error: enrollError } = await supabase
     .from('enrollments')
     .select('payment_status')
@@ -42,7 +43,7 @@ export default async function CourseDetailPage({
     redirect(`/programs/${params.slug}`);
   }
 
-  // 3. Fetch Curriculum
+  // 4. Fetch Curriculum
   const { data: lessons } = await supabase
     .from('lessons')
     .select('*')
@@ -51,13 +52,16 @@ export default async function CourseDetailPage({
 
   if (!lessons || lessons.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500 font-bold">Curriculum is coming soon.</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl">
+           <h2 className="text-2xl font-black mb-2">Curriculum Loading...</h2>
+           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Our instructors are preparing your content.</p>
+        </div>
       </div>
     );
   }
 
-  // 4. Fetch User Progress
+  // 5. Fetch User Progress
   const { data: progress } = await supabase
     .from('progress')
     .select('lesson_id')

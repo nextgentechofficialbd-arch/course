@@ -1,16 +1,22 @@
 
-import Navbar from '@/components/landing/Navbar';
+import React from 'react';
+import { createClient } from '@/lib/supabase/server';
 import Courses from '@/components/Courses';
-import Footer from '@/components/landing/Footer';
 
-export default function ProgramsPage() {
+export default async function ProgramsPage() {
+  const supabase = createClient();
+
+  const { data: courses } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('is_active', true)
+    .order('order_index', { ascending: true });
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200">
-      <Navbar />
-      <main className="pt-24">
-        <Courses onNavigate={() => {}} />
+      <main className="pt-24 pb-20">
+        <Courses courses={courses || []} />
       </main>
-      <Footer />
     </div>
   );
 }

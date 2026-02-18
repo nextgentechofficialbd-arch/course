@@ -15,6 +15,10 @@ export async function POST(req: Request) {
     const ip = (forwarded ? forwarded.split(',')[0] : realIp || 'unknown').trim();
     const ua = req.headers.get('user-agent') || 'unknown';
 
+    if (ip === 'unknown') {
+      return NextResponse.json({ success: false, message: 'Invalid IP' });
+    }
+
     // 1. Check if IP is blocked
     const { data: blocked } = await supabaseAdmin
       .from('blocked_ips')
@@ -50,6 +54,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    console.error('IP Track Error:', err);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }
