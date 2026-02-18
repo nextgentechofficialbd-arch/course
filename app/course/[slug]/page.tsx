@@ -49,7 +49,7 @@ export default async function CoursePlayerPage({
     .eq('course_id', course.id);
 
   const completedLessonIds = progress?.map(p => p.lesson_id) || [];
-  const activeLessonId = searchParams.lesson || lessons?.[0]?.id;
+  const activeLessonId = searchParams.lesson || lessons?.[0]?.id || '';
 
   return (
     <CoursePlayerLayout 
