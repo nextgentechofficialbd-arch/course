@@ -1,0 +1,8 @@
+{
+  "name": "EduAgency - Premium EdTech Platform",
+  "description": "A comprehensive EdTech agency platform for course management, administrative control, and high-quality educational delivery, built with React, Tailwind CSS, and Supabase.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
